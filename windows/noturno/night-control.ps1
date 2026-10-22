@@ -1,7 +1,7 @@
 param([ValidateSet('status','ativar','desativar','parar')][string]$Acao='status')
 $ErrorActionPreference='Stop'
-$base=Join-Path $env:ProgramData 'ControleNoturnoGiovanni'
-$task='ControlePCGiovanni-LatenciaNoturna'
+$base=Join-Path $env:ProgramData 'NightNetworkControl'
+$task='NightNetworkControl'
 switch($Acao) {
     'ativar' {
         Remove-Item -LiteralPath "$base\desativado.flag" -Force -ErrorAction SilentlyContinue
@@ -16,7 +16,7 @@ switch($Acao) {
     'parar' { Set-Content -LiteralPath "$base\parar.flag" -Value 'Encerramento das 6h' }
     'status' {
         [pscustomobject]@{Pasta=$base;AgendaAtivada=!(Test-Path "$base\desativado.flag");HorarioLocal=(Get-Date);Janela='22:00-06:00'}
-        Get-ScheduledTask -TaskName $task,"$task-Encerrar06h" | Select-Object TaskName,State
-        Get-Content "$base\noturno.log" -Tail 5 -ErrorAction SilentlyContinue
+        Get-ScheduledTask -TaskName $task,"$task-StopAt0600" | Select-Object TaskName,State
+        Get-Content "$base\night-control.log" -Tail 5 -ErrorAction SilentlyContinue
     }
 }

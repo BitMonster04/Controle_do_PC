@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 
 // Atraso local por WinDivert. Nao registra conteudo de pacotes.
-internal static class LatenciaNoturna
+internal static class NightNetworkControl
 {
     [DllImport("WinDivert.dll", CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi, SetLastError=true)]
     private static extern IntPtr WinDivertOpen(string filter, int layer, short priority, ulong flags);
@@ -52,7 +52,7 @@ internal static class LatenciaNoturna
     }
     private static void Log(string text) {
         try {
-            string path=Path.Combine(Root,"noturno.log");
+            string path=Path.Combine(Root,"night-control.log");
             if(File.Exists(path) && new FileInfo(path).Length>1048576) {
                 string old=path+".1"; if(File.Exists(old))File.Delete(old); File.Move(path,old);
             }
@@ -176,7 +176,7 @@ internal static class LatenciaNoturna
             if(args.Length!=2 || args[0]!="--probe-ms" || !int.TryParse(args[1],out probe) || (probe!=150&&probe!=700))return 2;
         }
         bool created;
-        using(var mutex=new Mutex(true,"Global\\ControlePCGiovanni-LatenciaNoturna",out created)) {
+        using(var mutex=new Mutex(true,"Global\\NightNetworkControl",out created)) {
             if(!created)return 0;
             try {return Run(probe);}catch(Exception e){Log("ERRO: "+e.Message);return 1;}
         }

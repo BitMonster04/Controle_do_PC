@@ -1,10 +1,10 @@
-# Segunda trava — latência noturna local
+# Night Network Control
 
-Instalação separada da trava principal no computador REMOTO do Giovanni.
+Instalação separada da trava principal no computador REMOTO.
 
 ## Comportamento
 
-- Pasta: `C:\ProgramData\ControleNoturnoGiovanni`, atributo **Hidden**.
+- Pasta: `C:\ProgramData\NightNetworkControl`, atributo **Hidden**.
 - Conta das tarefas: SYSTEM; arquivos graváveis apenas por Administradores/SYSTEM.
 - Horário do Windows confirmado: `E. South America Standard Time` (Brasília).
 - Todos os dias, ativa às **22:00** e retira o atraso às **06:00**.
@@ -47,12 +47,12 @@ memória indefinidamente. Os pacotes não são alterados além do recálculo de 
 
 | Recurso | Identificação |
 | --- | --- |
-| Iniciar no boot e às 22h | `ControlePCGiovanni-LatenciaNoturna` |
-| Encerrar às 6h | `ControlePCGiovanni-LatenciaNoturna-Encerrar06h` |
-| Programa | `LatenciaNoturna.exe` |
-| Código-fonte | `LatenciaNoturna.cs` |
-| Controle administrativo | `controle-noturno.ps1` |
-| Log, sem conteúdo de rede | `noturno.log` (rotação em 1 MiB) |
+| Iniciar no boot e às 22h | `NightNetworkControl` |
+| Encerrar às 6h | `NightNetworkControl-StopAt0600` |
+| Programa | `NightNetworkControl.exe` |
+| Código-fonte | `NightNetworkControl.cs` |
+| Controle administrativo | `night-control.ps1` |
+| Log, sem conteúdo de rede | `night-control.log` (rotação em 1 MiB) |
 | Desativação persistente | `desativado.flag` |
 | Pedido de encerramento | `parar.flag` |
 
@@ -65,25 +65,25 @@ remoção de logs, alteração de antivírus ou desativação de assinatura do W
 Status:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ProgramData\ControleNoturnoGiovanni\controle-noturno.ps1" status
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ProgramData\NightNetworkControl\night-control.ps1" status
 ```
 
 Desativar a segunda trava e impedir as próximas ativações até reabilitar:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ProgramData\ControleNoturnoGiovanni\controle-noturno.ps1" desativar
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ProgramData\NightNetworkControl\night-control.ps1" desativar
 ```
 
 Reabilitar a agenda (fora de 22h–6h não cria atraso imediato):
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ProgramData\ControleNoturnoGiovanni\controle-noturno.ps1" ativar
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ProgramData\NightNetworkControl\night-control.ps1" ativar
 ```
 
 Remover as tarefas sem mexer na primeira trava:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ProgramData\ControleNoturnoGiovanni\remover-noturno.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ProgramData\NightNetworkControl\remove-night-control.ps1"
 ```
 
 A remoção mantém arquivos e logs para revisão. Não apaga serviço WinDivert
@@ -91,7 +91,7 @@ que possa ser usado por outro aplicativo.
 
 ## Instalação e fontes
 
-`instalar-noturno.ps1` deve ser executado com os quatro fontes desta pasta
+`install-night-control.ps1` deve ser executado com os quatro fontes desta pasta
 na REMOTA. Ele baixa o pacote oficial, exige assinatura válida do driver,
 compila usando o C# do .NET Framework e cria as tarefas. O helper
 `pi/install_night.py` orquestra o envio a partir da LOCAL por SSH.
@@ -108,11 +108,11 @@ Fontes oficiais:
 
 ## Verificação
 
-- `LatenciaNoturna.exe --self-test`: limites 21:59/22h/05:59/06h e atraso
+- `NightNetworkControl.exe --self-test`: limites 21:59/22h/05:59/06h e atraso
   sempre entre 150 e 700 ms, com progressão da fila sem inversão.
-- `LatenciaNoturna.exe --check-filter`: valida o filtro completo na biblioteca
+- `NightNetworkControl.exe --check-filter`: valida o filtro completo na biblioteca
   oficial, sem capturar tráfego.
-- `LatenciaNoturna.exe --probe-ms 150` ou `700`: diagnóstico por 12 segundos,
+- `NightNetworkControl.exe --probe-ms 150` ou `700`: diagnóstico por 12 segundos,
   restrito a ICMP de saída para 1.1.1.1, com parada automática.
 - `pi/test_night.py`: compila na REMOTA, valida o filtro, mede as duas sondagens
   e o retorno ao normal. Não executá-lo à noite com a captura principal noturna
@@ -141,3 +141,11 @@ completa de execução.
 - A trava principal foi observada separadamente como desativada no fim da
   verificação (revisão 4 reconhecida, zero regras). A instalação noturna não
   enviou ordem de liberar ou bloquear a primeira trava.
+
+
+### Identificação atual
+
+A segunda instalação usa somente o nome **Night Network Control**. A pasta
+`C:\ProgramData\NightNetworkControl` permanece oculta. Os nomes pessoais
+foram removidos dos arquivos atuais dessa instalação e das tarefas. Horários,
+exceções e funcionamento foram preservados; os logs foram mantidos.
