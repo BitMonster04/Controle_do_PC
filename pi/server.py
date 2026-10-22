@@ -40,6 +40,8 @@ def initialize():
           create table if not exists settings (id integer primary key check(id=1), salt text not null, password_hash text not null);
           create table if not exists audit (id integer primary key, at real not null, blocked integer not null, revision integer not null);
           create table if not exists attempts (address text primary key, count integer not null, until real not null);
+          create table if not exists phone_links (token_hash text primary key, expires real not null, used integer not null default 0);
+          create table if not exists phone_sessions (token_hash text primary key);
         ''')
         if db.execute('select 1 from settings').fetchone():
             return None
@@ -101,6 +103,9 @@ class Handler(BaseHTTPRequestHandler):
         files = {'/':('index.html','text/html; charset=utf-8'), '':('index.html','text/html; charset=utf-8'),
                  '/style.css':('style.css','text/css; charset=utf-8'), '/app.js':('app.js','text/javascript; charset=utf-8'),
                  '/api.js':('pi/api.js','text/javascript; charset=utf-8'), '/config.js':('pi/config.js','text/javascript; charset=utf-8')}
+        files.update({'/manifest.webmanifest':('manifest.webmanifest','application/manifest+json'),
+                      '/pwa.js':('pwa.js','text/javascript; charset=utf-8'),'/sw.js':('sw.js','text/javascript; charset=utf-8'),
+                      '/icon-192.png':('icon-192.png','image/png'),'/icon-512.png':('icon-512.png','image/png')})
         if p not in files:
             self.send(404, {'message':'Nao encontrado.'}); return
         name, mime = files[p]
@@ -123,6 +128,23 @@ class Handler(BaseHTTPRequestHandler):
             if not expected or origin != expected:
                 self.send(403, {'message':'Origem nao autorizada.'}); return
         with connect() as db:
+            if p == '/api/enroll':
+                code=data.get('code','')
+                if not isinstance(code,str) or len(code)>200:
+                    self.send(403,{'message':'Link de ativacao invalido.'}); return
+                db.execute('begin immediate')
+                link=db.execute('select * from phone_links where token_hash=?',(digest(code),)).fetchone()
+                if not link or link['used'] or link['expires']<time.time():
+                    self.send(403,{'message':'Este link expirou ou ja foi usado. Solicite um novo link de ativacao.'}); return
+                token=secrets.token_urlsafe(32)
+                lifetime=30*86400
+                db.execute('delete from sessions where token_hash in (select token_hash from phone_sessions)')
+                db.execute('delete from phone_sessions')
+                db.execute('update phone_links set used=1 where token_hash=?',(digest(code),))
+                db.execute('insert into sessions values(?,?)',(digest(token),time.time()+lifetime))
+                db.execute('insert into phone_sessions values(?)',(digest(token),))
+                self.send(200,{'session':{'user':{'id':'chief'}}},cookie=f'pc_session={token}; Path=/controle-pc/; HttpOnly; Secure; SameSite=Strict; Max-Age={lifetime}')
+                return
             if p == '/api/login':
                 address=self.headers.get('X-Real-IP',self.client_address[0])
                 a=db.execute('select * from attempts where address=?',(address,)).fetchone()
@@ -188,8 +210,16 @@ if __name__=='__main__':
     ap=argparse.ArgumentParser()
     ap.add_argument('--init',action='store_true')
     ap.add_argument('--port',type=int,default=8795)
+    ap.add_argument('--phone-link',action='store_true')
     args=ap.parse_args()
-    if args.init:
+    if args.phone_link:
+        initialize()
+        code=secrets.token_urlsafe(32)
+        with connect() as db:
+            db.execute('delete from phone_links')
+            db.execute('insert into phone_links(token_hash,expires) values(?,?)',(digest(code),time.time()+86400))
+        print('https://aurora2d.tail8abf1e.ts.net:8443/controle-pc/#ativar='+code)
+    elif args.init:
         result=initialize()
         print(json.dumps(result) if result else 'Ja inicializado; credenciais preservadas.')
     else:

@@ -2,6 +2,25 @@
 
 ## Hospedagem atual: Pi (substitui o Supabase)
 
+### Celular da chefia e instalacao pelo Chrome
+
+O painel agora se chama **Controle PC Giovanni**. O indicador online/offline
+aparece em destaque acima do botao. `manifest.webmanifest`, icones 192/512 e
+service worker permitem instalar pelo Chrome. O botao “Instalar no celular”
+usa o convite nativo quando disponivel e mostra instrucoes do menu caso contrario.
+O service worker nao guarda respostas da API nem simula estado offline.
+
+`pi/activate_phone.py` gera link de uso unico valido por 24 horas e o salva
+apenas em `ATIVAR-CELULAR.txt` na LOCAL (ignorado pelo Git). Abra esse link
+primeiro no Chrome do celular da chefia. A sessao fica salva por 30 dias,
+sem digitar senha, e somente um celular e autorizado por vez. Ativar outro
+invalida a sessao do anterior. Limpar os dados do Chrome exige novo link.
+O link de ativacao e privado; nao publica-lo no repositorio.
+
+O login por senha de recuperacao continua disponivel em
+`/controle-pc/?recuperar=1`; nao foi removido globalmente. Nenhuma alteracao
+nessa configuracao instala ou autoriza o agente SYSTEM da REMOTA.
+
 Painel instalado em:
 https://aurora2d.tail8abf1e.ts.net:8443/controle-pc/
 

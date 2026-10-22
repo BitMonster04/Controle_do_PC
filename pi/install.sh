@@ -11,12 +11,14 @@ fi
 id pccontrol >/dev/null 2>&1 || useradd --system --home-dir /var/lib/controle-pc --shell /usr/sbin/nologin pccontrol
 install -d -m 755 "$dest" "$dest/pi"
 install -d -o pccontrol -g pccontrol -m 700 /var/lib/controle-pc
-for f in index.html style.css app.js; do install -m 644 "$src/$f" "$dest/$f"; done
+for f in index.html style.css app.js manifest.webmanifest pwa.js sw.js icon-192.png icon-512.png; do install -m 644 "$src/$f" "$dest/$f"; done
 for f in server.py config.js api.js; do install -m 644 "$src/pi/$f" "$dest/pi/$f"; done
 if ! test -f /var/lib/controle-pc/state.sqlite3; then
   umask 077
   PC_DATA=/var/lib/controle-pc python3 "$dest/pi/server.py" --init > /root/controle-pc-credenciais.json
   chown pccontrol:pccontrol /var/lib/controle-pc/state.sqlite3
+else
+  PC_DATA=/var/lib/controle-pc python3 "$dest/pi/server.py" --init > /dev/null
 fi
 cat > /etc/systemd/system/controle-pc.service <<'UNIT'
 [Unit]

@@ -7,4 +7,5 @@ __pycache__/
 *.sqlite3*
 *credenciais*.json
 PAINEL-ACESSO.txt
+ATIVAR-CELULAR.txt
 *.tar.gz

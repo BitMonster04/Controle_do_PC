@@ -106,4 +106,26 @@ class BackendTests(unittest.TestCase):
         self.request('/api/logout',{})
         self.assertEqual(self.request('/api/rpc/pc_status',{})['code'],401)
 
+    def test_phone_link_one_use_and_persistent_session(self):
+        code='test-only-phone-link'
+        with server.connect() as db:
+            db.execute('insert into phone_links(token_hash,expires) values(?,?)',(server.digest(code),time.time()+60))
+        self.assertEqual(self.request('/api/enroll',{'code':'wrong'})['code'],403)
+        self.assertEqual(self.request('/api/enroll',{'code':code},origin='https://evil.example')['code'],403)
+        r=self.request('/api/enroll',{'code':code})
+        self.assertEqual(r['code'],200)
+        self.assertIn('Max-Age=2592000',r['cookie'])
+        self.cookie=r['cookie'].split(';')[0]
+        self.assertEqual(self.request('/api/rpc/pc_status',{})['code'],200)
+        self.assertEqual(self.request('/api/enroll',{'code':code})['code'],403)
+
+    def test_one_phone_and_password_recovery(self):
+        for code in ('phone-one','phone-two'):
+            with server.connect() as db:
+                db.execute('insert into phone_links(token_hash,expires) values(?,?)',(server.digest(code),time.time()+60))
+        first=self.request('/api/enroll',{'code':'phone-one'})['cookie'].split(';')[0]
+        self.assertEqual(self.request('/api/enroll',{'code':'phone-two'})['code'],200)
+        self.assertIsNone(self.request('/api/session',cookie=first)['data']['session'])
+        self.assertEqual(self.request('/api/login',{'password':self.creds['panel_password']})['code'],200)
+
 if __name__=='__main__':unittest.main()

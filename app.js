@@ -1,26 +1,27 @@
 const $ = id => document.getElementById(id);
 const cfg = window.PC_CONFIG || {};
+if (cfg.pi && new URLSearchParams(window.location.search).has('recuperar')) cfg.phoneAccess = false;
 let client, session, last, polling = false, submitting = false, apiFailed = true;
 function view(name) {
   for (const id of ['setup','login','panel']) $(id).hidden = id !== name;
-  $('logout').hidden = name !== 'panel';
+  $('logout').hidden = name !== 'panel' || cfg.phoneAccess;
   if (cfg.pi && name === 'login') {
     $('login').hidden = true; $('panel').hidden = false; render();
   }
 }
 function render() {
   if (cfg.pi && !session) {
-    $('toggle').className = 'toggle unknown'; $('toggle').disabled = false;
-    $('toggle-label').textContent = 'Entrar no controle';
-    $('toggle-action').textContent = 'Clique para acessar';
+    $('toggle').className = 'toggle unknown'; $('toggle').disabled = !!cfg.phoneAccess;
+    $('toggle-label').textContent = cfg.phoneAccess ? 'Acesso não ativado' : 'Entrar no controle';
+    $('toggle-action').textContent = cfg.phoneAccess ? 'Aguardando ativação do aparelho' : 'Clique para acessar';
     $('connection').className = 'connection'; $('connection-text').textContent = 'Acesso protegido';
-    $('hint').textContent = 'Entre para ver se o computador está online e controlar a trava.';
+    $('hint').textContent = cfg.phoneAccess ? 'Abra o link de ativação neste celular uma vez. Depois, o painel abre direto, sem senha.' : 'Entre para ver se o computador está online e controlar a trava.';
     $('last-seen').textContent = ''; $('panel-error').textContent = ''; return;
   }
   const online = !apiFailed && last?.online === true;
   const pending = last?.pending === true || submitting;
   const known = typeof last?.blocked === 'boolean';
-  $('connection').className = 'connection' + (online ? ' online' : '');
+  $('connection').className = 'connection' + (online ? ' online' : !apiFailed ? ' offline' : '');
   $('connection-text').textContent = apiFailed ? 'Sem conexão com o painel' : online ? 'Computador online' : last?.last_seen ? 'Computador offline' : 'Aguardando primeira conexão';
   $('toggle').className = 'toggle ' + (known ? last.blocked ? 'active' : 'inactive' : 'unknown') + (!online ? ' offline' : '') + (pending ? ' pending' : '');
   $('toggle').disabled = !online || pending || !known;
@@ -57,6 +58,14 @@ else {
   }
   client.auth.onAuthStateChange((_event,s) => { session=s; view(s?'panel':'login'); if(s) setTimeout(refresh,0); });
   const result = await client.auth.getSession(); session=result.data.session; view(session?'panel':'login');
+  if (cfg.pi && cfg.phoneAccess) {
+    const code = new URLSearchParams(window.location.hash.slice(1)).get('ativar');
+    if(code) {
+      window.history.replaceState(null,'',window.location.pathname);
+      const enrollment=await client.auth.enroll(code);
+      if(enrollment.error) $('panel-error').textContent=enrollment.error.message;
+    }
+  }
   if(session) await refresh();
   setInterval(refresh,5000);
 }

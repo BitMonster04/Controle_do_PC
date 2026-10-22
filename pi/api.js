@@ -12,6 +12,7 @@ export function createClient() {
   return {
     auth:{
       onAuthStateChange(fn){listener=fn;},
+      async enroll(code){const r=await request('enroll',{code});if(!r.error)listener('SIGNED_IN',r.data.session);return r;},
       async getSession(){const r=await request('session');return {data:{session:r.data?.session||null},error:r.error};},
       async signInWithPassword(values){const r=await request('login',{password:values.password});if(!r.error)listener('SIGNED_IN',r.data.session);return r;},
       async signOut(){const r=await request('logout',{});if(!r.error)listener('SIGNED_OUT',null);return r;}
