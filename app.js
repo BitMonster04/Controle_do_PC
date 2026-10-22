@@ -29,7 +29,7 @@ function render() {
   $('lock-shackle').setAttribute('d', known && !last.blocked ? 'M15 23v-7a9 9 0 0 1 17-4' : 'M15 23v-7a9 9 0 0 1 18 0v7');
   $('hint').textContent = !online ? 'A trava não pode ser alterada enquanto a máquina estiver sem comunicação.' : pending ? 'A ordem foi enviada. Aguarde a confirmação da REMOTA.' : known ? last.blocked ? 'Os jogos identificados estão com acesso à internet bloqueado.' : 'O acesso à internet dos jogos está liberado.' : 'A máquina ainda não informou o estado da trava.';
   $('last-seen').textContent = last?.last_seen ? 'Último contato: ' + new Date(last.last_seen).toLocaleString('pt-BR') + (last.rule_count != null ? ' · ' + last.rule_count + ' regras' : '') : '';
-  $('device-name').textContent = last?.name || 'Computador dos jogos';
+  $('device-name').textContent = last?.name || 'PC Giovanni';
 }
 async function refresh() {
   if (!session || polling) return;

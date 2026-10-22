@@ -4,14 +4,14 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#10141b">
   <meta name="referrer" content="no-referrer">
-  <title>Controle do PC · Shock Imports</title>
+  <title>Controle PC Giovanni</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header><a class="brand" href="./">SHOCK<span>IMPORTS</span></a><button id="logout" hidden class="quiet">Sair</button></header>
+  <header><a class="brand" href="./">CONTROLE PC<span>GIOVANNI</span></a><button id="logout" hidden class="quiet">Sair</button></header>
   <main>
     <section id="setup" class="panel" aria-label="Controle da trava aguardando conexão">
-      <p class="eyebrow">CONTROLE DO PC</p><h1>Computador dos jogos</h1>
+      <p class="eyebrow">CONTROLE DO PC</p><h1>PC Giovanni</h1>
       <p class="connection"><span class="dot"></span>Aguardando conexão</p>
       <button class="toggle unknown" disabled aria-describedby="setup-hint">
         <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 23v-7a9 9 0 0 1 18 0v7"/><rect x="10" y="23" width="28" height="21" rx="5"/><path d="M24 31v5"/></svg>
@@ -23,14 +23,14 @@
     </section>
     <section id="login" hidden class="card" role="dialog" aria-modal="true" aria-labelledby="login-title"><button id="close-login" type="button" class="quiet">Voltar</button><p class="eyebrow">CONTROLE DO PC</p><h1 id="login-title">Entrar no painel</h1><p>Use o acesso autorizado ao painel.</p><form id="login-form"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required><button type="submit" class="submit">Entrar</button></form><p id="login-error" role="alert"></p></section>
     <section id="panel" hidden class="panel" aria-label="Controle da trava">
-      <p class="eyebrow">CONTROLE DO PC</p><h1 id="device-name">Computador dos jogos</h1>
+      <p class="eyebrow">CONTROLE DO PC</p><h1 id="device-name">PC Giovanni</h1>
       <p id="connection" class="connection"><span class="dot"></span><span id="connection-text">Verificando conexão…</span></p>
       <button id="toggle" class="toggle unknown" disabled aria-describedby="hint"><svg viewBox="0 0 48 48" aria-hidden="true"><path id="lock-shackle" d="M15 23v-7a9 9 0 0 1 18 0v7"/><rect x="10" y="23" width="28" height="21" rx="5"/><path d="M24 31v5"/></svg><span id="toggle-label">Verificando trava…</span><span id="toggle-action" class="toggle-action">Aguardando a máquina</span></button>
       <p id="hint" class="hint" aria-live="polite">O estado só muda após confirmação do computador.</p>
       <p id="last-seen" class="last-seen"></p><p id="panel-error" role="alert"></p>
     </section>
   </main>
-  <footer>SHOCK IMPORTS <span>Controle de acesso aos jogos</span></footer>
+  <footer>Controle PC Giovanni <span>Controle de acesso aos jogos</span></footer>
   <script src="config.js"></script><script type="module" src="app.js"></script>
 </body>
 </html>

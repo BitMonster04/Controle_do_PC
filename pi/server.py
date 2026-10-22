@@ -58,7 +58,7 @@ def password_hash(password, salt):
 
 def state(db):
     d = db.execute('select * from device where id=1').fetchone()
-    return dict(name='Computador dos jogos', online=bool(d['last_seen'] and d['last_seen'] > time.time()-60),
+    return dict(name='PC Giovanni', online=bool(d['last_seen'] and d['last_seen'] > time.time()-60),
                 blocked=None if d['blocked'] is None else bool(d['blocked']), rule_count=d['rule_count'],
                 last_seen=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime(d['last_seen'])) if d['last_seen'] else None,
                 pending=bool(d['revision']>d['ack'] and d['expires']>time.time()),
