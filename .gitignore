@@ -3,3 +3,8 @@ agent-config.json
 *.log
 node_modules/
 .env*
+__pycache__/
+*.sqlite3*
+*credenciais*.json
+PAINEL-ACESSO.txt
+*.tar.gz

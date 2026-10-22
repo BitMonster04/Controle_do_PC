@@ -1,5 +1,46 @@
 # Controle do PC — Shock Imports
 
+## Hospedagem atual: Pi (substitui o Supabase)
+
+Painel instalado em:
+https://aurora2d.tail8abf1e.ts.net:8443/controle-pc/
+
+O GitHub Pages apenas redireciona para esse endereco. O Pi hospeda interface,
+login, SQLite e a API do agente. Nenhuma configuracao Supabase e necessaria
+nessa instalacao. As instrucoes antigas mais abaixo sao somente referencia.
+
+- Servico: `controle-pc.service`, usuario sem login `pccontrol`.
+- Backend: `127.0.0.1:8795`, publicado pelo Nginx existente em `/controle-pc/`.
+- Codigo: `/opt/controle-pc`; dados privados: `/var/lib/controle-pc`.
+- Credenciais iniciais: `/root/controle-pc-credenciais.json`, permissao 600.
+- O agente usa HTTPS de saida; nao abre porta na REMOTA.
+- O estado atual precisa ser informado pelo agente antes de habilitar a trava.
+- Vermelho = Trava ativada. Verde = Trava desativada. Antes do login, o mesmo
+  botao central oferece acesso ao controle, sem exibir um estado inventado.
+
+`pi/install.sh` instala o painel no Pi e preserva os outros aplicativos.
+`pi/access_note.py` salva a senha do painel somente em `PAINEL-ACESSO.txt`,
+arquivo ignorado pelo Git; nao imprime senha nem token.
+`pi/deploy_remote.py` prepara a REMOTA e transfere o token individual por SSH
+(stdin criptografado), sem token em argumentos de processo ou GitHub.
+`windows/instalar-pi.ps1` instala a tarefa `ShockImports-ControleJogos` como
+SYSTEM ao iniciar o Windows. A tarefa executa somente bloquear/desbloquear
+pelo script local `controle.ps1`. `windows/remover-agente.ps1` remove a tarefa.
+
+O backend foi validado com oito testes de login, autorizacao, confirmacao,
+expiracao e auditoria. Execute `python -m unittest discover -s tests -p test_pi.py`.
+Os sete testes de interface continuam em `node --test tests/panel.test.mjs`.
+Validacao de sintaxe nao substitui a instalacao real na REMOTA.
+
+**Situacao ao preparar esta versao:** painel instalado e verificado no Pi;
+agente da REMOTA ainda pendente de instalacao e autorizacao explicita apos
+revisao automatica. Nao presumir controle de ponta a ponta antes de verificar
+o primeiro heartbeat e a execucao de uma ordem.
+
+---
+
+## Arquitetura anterior — Supabase (nao usada no Pi)
+
 Painel com um botao grande no centro: **Trava ativada** em vermelho e
 **Trava desativada** em verde. O clique solicita o estado oposto. O painel
 so confirma a mudanca quando a REMOTA informa o resultado do firewall.

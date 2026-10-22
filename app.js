@@ -1,9 +1,22 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm';
 const $ = id => document.getElementById(id);
 const cfg = window.PC_CONFIG || {};
 let client, session, last, polling = false, submitting = false, apiFailed = true;
-function view(name) { for (const id of ['setup','login','panel']) $(id).hidden = id !== name; $('logout').hidden = name !== 'panel'; }
+function view(name) {
+  for (const id of ['setup','login','panel']) $(id).hidden = id !== name;
+  $('logout').hidden = name !== 'panel';
+  if (cfg.pi && name === 'login') {
+    $('login').hidden = true; $('panel').hidden = false; render();
+  }
+}
 function render() {
+  if (cfg.pi && !session) {
+    $('toggle').className = 'toggle unknown'; $('toggle').disabled = false;
+    $('toggle-label').textContent = 'Entrar no controle';
+    $('toggle-action').textContent = 'Clique para acessar';
+    $('connection').className = 'connection'; $('connection-text').textContent = 'Acesso protegido';
+    $('hint').textContent = 'Entre para ver se o computador está online e controlar a trava.';
+    $('last-seen').textContent = ''; $('panel-error').textContent = ''; return;
+  }
   const online = !apiFailed && last?.online === true;
   const pending = last?.pending === true || submitting;
   const known = typeof last?.blocked === 'boolean';
@@ -29,10 +42,19 @@ async function refresh() {
   } catch (e) { apiFailed = true; $('panel-error').textContent = e.message || 'Não foi possível consultar a máquina.'; }
   finally { polling = false; render(); }
 }
-if (!cfg.supabaseUrl || !cfg.supabasePublicKey) { view('setup'); }
+if (!cfg.pi && (!cfg.supabaseUrl || !cfg.supabasePublicKey)) { view('setup'); }
 else {
-  if (cfg.supabasePublicKey.startsWith('sb_secret_')) throw new Error('Use somente uma chave pública.');
-  client = createClient(cfg.supabaseUrl, cfg.supabasePublicKey, {auth:{persistSession:true,autoRefreshToken:true}});
+  if (cfg.pi) {
+    const local = await import('./api.js');
+    client = local.createClient();
+    $('email').required = false;
+    $('email').hidden = true;
+    document.querySelector('label[for="email"]').hidden = true;
+  } else {
+    const {createClient} = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm');
+    if (cfg.supabasePublicKey.startsWith('sb_secret_')) throw new Error('Use somente uma chave pública.');
+    client = createClient(cfg.supabaseUrl, cfg.supabasePublicKey, {auth:{persistSession:true,autoRefreshToken:true}});
+  }
   client.auth.onAuthStateChange((_event,s) => { session=s; view(s?'panel':'login'); if(s) setTimeout(refresh,0); });
   const result = await client.auth.getSession(); session=result.data.session; view(session?'panel':'login');
   if(session) await refresh();
@@ -44,7 +66,9 @@ $('login-form').addEventListener('submit',async e => {
   catch(e){$('login-error').textContent=e.message;} finally{b.disabled=false;}
 });
 $('logout').addEventListener('click',async()=>{await client.auth.signOut();last=null;apiFailed=true;render();});
+$('close-login').addEventListener('click',()=>{if(cfg.pi){$('login').hidden=true;$('toggle').focus();}});
 $('toggle').addEventListener('click',async()=>{
+  if (cfg.pi && !session) { $('login').hidden = false; $('password').focus(); return; }
   if(submitting || !last?.online || apiFailed || last.pending || typeof last.blocked!=='boolean') return;
   submitting=true;render();$('panel-error').textContent='';
   try {const {error}=await client.rpc('pc_command',{p_device:cfg.deviceId,p_blocked:!last.blocked});if(error) throw error;await refresh();}

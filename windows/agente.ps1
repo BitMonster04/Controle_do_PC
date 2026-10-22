@@ -30,8 +30,13 @@ while ($true) {
             p_blocked=$estado.blocked; p_rule_count=$estado.count
             p_ack=$ack; p_error=$erro
         } | ConvertTo-Json -Compress
-        $reply = Invoke-RestMethod -Method Post -Uri "$($cfg.supabaseUrl)/rest/v1/rpc/pc_heartbeat" `
-            -Headers @{apikey=$cfg.publicKey} -ContentType 'application/json' -Body $body -TimeoutSec 20
+        if ($cfg.serverUrl) {
+            $reply = Invoke-RestMethod -Method Post -Uri "$($cfg.serverUrl)/api/heartbeat" `
+                -ContentType 'application/json' -Body $body -TimeoutSec 20
+        } else {
+            $reply = Invoke-RestMethod -Method Post -Uri "$($cfg.supabaseUrl)/rest/v1/rpc/pc_heartbeat" `
+                -Headers @{apikey=$cfg.publicKey} -ContentType 'application/json' -Body $body -TimeoutSec 20
+        }
         $ack=$null; $erro=$null
         if ($reply.action -in @('bloquear','desbloquear')) {
             $ack=[long]$reply.revision

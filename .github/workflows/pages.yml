@@ -22,7 +22,8 @@ jobs:
       - name: Separar apenas os arquivos publicos
         run: |
           mkdir _site
-          cp index.html style.css app.js config.js .nojekyll _site/
+          cp pi/github-redirect.html _site/index.html
+          cp .nojekyll _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
