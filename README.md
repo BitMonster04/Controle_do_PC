@@ -51,7 +51,8 @@ push inicial ocorreu antes dessa configuracao. A URL esperada e:
 
 https://bitmonster04.github.io/Controle_do_PC/
 
-Antes da configuracao, a pagina mostra “Configuracao pendente”. A URL acima
+Antes da configuracao, a pagina mostra o botao grande desabilitado, com
+“Aguardando conexao”, sem simular um estado de trava confirmado. A URL acima
 nao confirma que o GitHub Pages ja terminou a publicacao.
 
 ## 3. Instalar o agente — SOMENTE NA REMOTA
