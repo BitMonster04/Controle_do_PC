@@ -13,9 +13,14 @@ O service worker nao guarda respostas da API nem simula estado offline.
 `pi/activate_phone.py` gera link de uso unico valido por 24 horas e o salva
 apenas em `ATIVAR-CELULAR.txt` na LOCAL (ignorado pelo Git). Abra esse link
 primeiro no Chrome do celular da chefia. A sessao fica salva por 30 dias,
-sem digitar senha, e somente um celular e autorizado por vez. Ativar outro
-invalida a sessao do anterior. Limpar os dados do Chrome exige novo link.
+sem digitar senha. Existem dois perfis independentes: `teste` (primeiro link,
+seu celular) e `chefia`. Ambos funcionam ao mesmo tempo. Ativar novamente o
+mesmo perfil substitui somente o aparelho daquele perfil. Limpar os dados do
+Chrome exige novo link. Consulte `ACESSOS-CELULARES.md` antes de revogar acessos.
 O link de ativacao e privado; nao publica-lo no repositorio.
+
+Para gerar somente o acesso da chefia, use `python pi/activate_phone.py --name chefia`.
+Ele salva em `ATIVAR-CHEFIA.txt`, sem tocar no primeiro `ATIVAR-CELULAR.txt`.
 
 O login por senha de recuperacao continua disponivel em
 `/controle-pc/?recuperar=1`; nao foi removido globalmente. Nenhuma alteracao

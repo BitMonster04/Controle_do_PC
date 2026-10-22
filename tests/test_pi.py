@@ -128,4 +128,27 @@ class BackendTests(unittest.TestCase):
         self.assertIsNone(self.request('/api/session',cookie=first)['data']['session'])
         self.assertEqual(self.request('/api/login',{'password':self.creds['panel_password']})['code'],200)
 
+    def test_chief_and_test_phone_remain_authorized_together(self):
+        for code,label in (('test-phone','teste'),('chief-phone','chefia'),('chief-replacement','chefia')):
+            with server.connect() as db:
+                db.execute('insert into phone_links(token_hash,expires,label) values(?,?,?)',(server.digest(code),time.time()+60,label))
+        test_cookie=self.request('/api/enroll',{'code':'test-phone'})['cookie'].split(';')[0]
+        chief_cookie=self.request('/api/enroll',{'code':'chief-phone'})['cookie'].split(';')[0]
+        self.assertEqual(self.request('/api/rpc/pc_status',{},cookie=test_cookie)['code'],200)
+        self.assertEqual(self.request('/api/rpc/pc_status',{},cookie=chief_cookie)['code'],200)
+        self.request('/api/enroll',{'code':'chief-replacement'})
+        self.assertEqual(self.request('/api/rpc/pc_status',{},cookie=test_cookie)['code'],200)
+        self.assertEqual(self.request('/api/rpc/pc_status',{},cookie=chief_cookie)['code'],401)
+
+    def test_migration_preserves_existing_test_session(self):
+        with server.connect() as db:
+            db.execute('drop table phone_sessions')
+            db.execute('create table phone_sessions(token_hash text primary key)')
+            db.execute('insert into sessions values(?,?)',(server.digest('old-test-session'),time.time()+60))
+            db.execute('insert into phone_sessions values(?)',(server.digest('old-test-session'),))
+        self.assertIsNone(server.initialize())
+        self.assertEqual(self.request('/api/rpc/pc_status',{},cookie='pc_session=old-test-session')['code'],200)
+        with server.connect() as db:
+            self.assertEqual(db.execute('select label from phone_sessions').fetchone()[0],'teste')
+
 if __name__=='__main__':unittest.main()

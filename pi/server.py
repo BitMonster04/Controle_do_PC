@@ -43,6 +43,11 @@ def initialize():
           create table if not exists phone_links (token_hash text primary key, expires real not null, used integer not null default 0);
           create table if not exists phone_sessions (token_hash text primary key);
         ''')
+        # Preserva o celular de teste ja autorizado antes dos acessos separados.
+        for table in ('phone_links','phone_sessions'):
+            columns={row['name'] for row in db.execute(f'pragma table_info({table})')}
+            if 'label' not in columns:
+                db.execute(f"alter table {table} add column label text not null default 'teste'")
         if db.execute('select 1 from settings').fetchone():
             return None
         password = secrets.token_urlsafe(18)
@@ -138,11 +143,11 @@ class Handler(BaseHTTPRequestHandler):
                     self.send(403,{'message':'Este link expirou ou ja foi usado. Solicite um novo link de ativacao.'}); return
                 token=secrets.token_urlsafe(32)
                 lifetime=30*86400
-                db.execute('delete from sessions where token_hash in (select token_hash from phone_sessions)')
-                db.execute('delete from phone_sessions')
+                db.execute('delete from sessions where token_hash in (select token_hash from phone_sessions where label=?)',(link['label'],))
+                db.execute('delete from phone_sessions where label=?',(link['label'],))
                 db.execute('update phone_links set used=1 where token_hash=?',(digest(code),))
                 db.execute('insert into sessions values(?,?)',(digest(token),time.time()+lifetime))
-                db.execute('insert into phone_sessions values(?)',(digest(token),))
+                db.execute('insert into phone_sessions(token_hash,label) values(?,?)',(digest(token),link['label']))
                 self.send(200,{'session':{'user':{'id':'chief'}}},cookie=f'pc_session={token}; Path=/controle-pc/; HttpOnly; Secure; SameSite=Strict; Max-Age={lifetime}')
                 return
             if p == '/api/login':
@@ -211,13 +216,22 @@ if __name__=='__main__':
     ap.add_argument('--init',action='store_true')
     ap.add_argument('--port',type=int,default=8795)
     ap.add_argument('--phone-link',action='store_true')
+    ap.add_argument('--phone-name',choices=['teste','chefia'],default='teste')
+    ap.add_argument('--revoke-phone',choices=['teste','chefia'])
     args=ap.parse_args()
-    if args.phone_link:
+    if args.revoke_phone:
+        initialize()
+        with connect() as db:
+            db.execute('delete from sessions where token_hash in (select token_hash from phone_sessions where label=?)',(args.revoke_phone,))
+            db.execute('delete from phone_sessions where label=?',(args.revoke_phone,))
+            db.execute('delete from phone_links where label=?',(args.revoke_phone,))
+        print('Acesso revogado somente para: '+args.revoke_phone)
+    elif args.phone_link:
         initialize()
         code=secrets.token_urlsafe(32)
         with connect() as db:
-            db.execute('delete from phone_links')
-            db.execute('insert into phone_links(token_hash,expires) values(?,?)',(digest(code),time.time()+86400))
+            db.execute('delete from phone_links where label=?',(args.phone_name,))
+            db.execute('insert into phone_links(token_hash,expires,label) values(?,?,?)',(digest(code),time.time()+86400,args.phone_name))
         print('https://aurora2d.tail8abf1e.ts.net:8443/controle-pc/#ativar='+code)
     elif args.init:
         result=initialize()
