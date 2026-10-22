@@ -1,5 +1,12 @@
 # Controle do PC — Shock Imports
 
+**Atualização de instalação:** agente Windows instalado após autorização do
+usuário; tarefa Running, heartbeat confirmado e ordem real da API reconhecida
+mantendo trava ativa com 225 regras. Ainda não foi testada alternância nem reboot.
+Referências de chaves extras: `CHAVES-SSH-CONTROLE-PC.md`. A chave principal e
+os acessos TESTE/CHEFIA foram preservados. Trechos abaixo sobre agente pendente
+refletem o estado anterior à instalação.
+
 ## Hospedagem atual: Pi (substitui o Supabase)
 
 ### Celular da chefia e instalacao pelo Chrome

@@ -1,5 +1,6 @@
 """Executar na LOCAL. Transfere token Pi->REMOTA via SSH, sem exibi-lo."""
 import json
+import base64
 from pathlib import Path
 import subprocess
 
@@ -9,8 +10,10 @@ REMOTE='ggped@100.87.198.65'
 SSH=['ssh','-i',KEY,'-o','BatchMode=yes','-o','ConnectTimeout=8']
 
 def remote(script):
-    r=subprocess.run(SSH+[REMOTE,'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command -'],input=script,text=True,capture_output=True)
-    if r.returncode:
+    encoded=base64.b64encode(script.encode('utf-8')).decode('ascii')
+    line=("$ErrorActionPreference='Stop'; try { & ([ScriptBlock]::Create([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('"+encoded+"')))); Write-Output '__PC_OK__' } catch { Write-Output '__PC_FAILED__'; exit 1 }\n")
+    r=subprocess.run(SSH+[REMOTE,'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command -'],input=line,text=True,capture_output=True)
+    if r.returncode or '__PC_OK__' not in r.stdout:
         # Nao inclui script, token nem saida arbitraria nos erros.
         raise SystemExit('Falha ao executar preparacao na REMOTA. Nenhuma credencial foi exibida.')
     return r.stdout
@@ -26,6 +29,8 @@ def main():
             "$cfg = '"+cfg+"'\n"
             "$cfg | Set-Content -LiteralPath 'C:\\ProgramData\\BloqueioJogos\\PainelSetup\\agent-config.json' -Encoding UTF8\n"
             "& 'C:\\ProgramData\\BloqueioJogos\\PainelSetup\\instalar-pi.ps1'\n"
+            "if (!(Test-Path 'C:\\ProgramData\\BloqueioJogos\\agente.ps1')) { exit 6 }\n"
+            "$task=Get-ScheduledTask -TaskName 'ShockImports-ControleJogos' -ErrorAction Stop\n"
             "if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit 4 }\n"
             "} catch { exit 5 }\n")
     # Somente stdin criptografado; segredo nao vai em argumentos de processo.
