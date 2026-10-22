@@ -1,0 +1,5 @@
+*.zip
+agent-config.json
+*.log
+node_modules/
+.env*
