@@ -1,5 +1,10 @@
 # Controle do PC — Shock Imports
 
+**Segunda trava noturna instalada:** consulte `windows/noturno/README.md`.
+Funciona localmente na REMOTA das 22h às 6h, em pasta separada e oculta,
+acrescentando atraso de 150–700 ms aos pacotes abrangidos. É independente do
+botão da primeira trava e inclui exceções para preservar a administração.
+
 **Atualização de instalação:** agente Windows instalado após autorização do
 usuário; tarefa Running, heartbeat confirmado e ordem real da API reconhecida
 mantendo trava ativa com 225 regras. Ainda não foi testada alternância nem reboot.
